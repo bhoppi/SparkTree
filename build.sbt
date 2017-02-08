@@ -2,8 +2,8 @@ name := "LambdaMART"
 
 version := "3.0"
 
-scalaVersion := "2.10.6"
-scalaBinaryVersion := "2.10"
+scalaVersion := "2.11.8"
+scalaBinaryVersion := "2.11"
 
 dependencyOverrides ++= Set(
   "org.scala-lang" % "scala-library" % scalaVersion.value,
@@ -12,7 +12,7 @@ dependencyOverrides ++= Set(
 )
 
 libraryDependencies ++= Seq(
-  "org.apache.spark" % "spark-core_2.10" % "1.6.0" % "provided",
-  "org.apache.spark" % "spark-mllib_2.10" % "1.6.0" % "provided",
-  "com.github.scopt" % "scopt_2.10" % "3.3.0"
+  "org.apache.spark" %% "spark-core" % "2.1.0" % "provided",
+  "org.apache.spark" %% "spark-mllib" % "2.1.0" % "provided",
+  "com.github.scopt" %% "scopt" % "3.5.0"
 )

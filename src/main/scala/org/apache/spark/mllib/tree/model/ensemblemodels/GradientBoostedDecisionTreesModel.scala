@@ -18,8 +18,10 @@
 package org.apache.spark.mllib.tree.model.ensemblemodels
 
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import org.apache.spark.SparkContext
 import org.apache.spark.annotation.Experimental
 import org.apache.spark.api.java.JavaRDD
+import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.tree.config.Algo
@@ -29,9 +31,8 @@ import org.apache.spark.mllib.tree.loss.Loss
 import org.apache.spark.mllib.tree.model.opdtmodel.OptimizedDecisionTreeModel
 import org.apache.spark.mllib.util.{Loader, Saveable}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.util.Utils
-import org.apache.spark.{Logging, SparkContext}
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -330,8 +331,8 @@ private[tree] object TreeEnsembleModel extends Logging {
     case class EnsembleNodeData(treeId: Int, node: TreeNodeData)
 
     def save(sc: SparkContext, path: String, model: TreeEnsembleModel, className: String): Unit = {
-      val sqlContext = new SQLContext(sc)
-      import sqlContext.implicits._
+      val sparkSession = SparkSession.builder.getOrCreate()
+      import sparkSession.implicits._
 
       // SPARK-6120: We do a hacky check here so users understand why save() is failing
       //             when they run the ML guide example.
@@ -391,8 +392,9 @@ private[tree] object TreeEnsembleModel extends Logging {
         path: String,
         treeAlgo: String): Array[OptimizedDecisionTreeModel] = {
       val datapath = Loader.dataPath(path)
-      val sqlContext = new SQLContext(sc)
-      val nodes = sqlContext.read.parquet(datapath).map(TreeNodeData.apply)
+      val sparkSession = SparkSession.builder.getOrCreate()
+      import sparkSession.implicits._
+      val nodes = sparkSession.read.parquet(datapath).map(TreeNodeData.apply)
       val trees = constructTrees(nodes)
       trees.map(new OptimizedDecisionTreeModel(_, Algo.fromString(treeAlgo)))
     }

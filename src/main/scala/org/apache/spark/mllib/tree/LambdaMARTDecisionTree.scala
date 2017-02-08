@@ -1,11 +1,11 @@
 package org.apache.spark.mllib.tree
 
 import breeze.collection.mutable.SparseArray
-import org.apache.spark.Logging
 import org.apache.spark.broadcast.Broadcast
+import org.apache.spark.internal.Logging
+import org.apache.spark.ml.tree.impl.TimeTracker
 import org.apache.spark.mllib.tree.config.Algo._
 import org.apache.spark.mllib.tree.config.Strategy
-import org.apache.spark.mllib.tree.impl._
 import org.apache.spark.mllib.tree.model.informationgainstats.InformationGainStats
 import org.apache.spark.mllib.tree.model.node._
 import org.apache.spark.mllib.tree.model.opdtmodel.OptimizedDecisionTreeModel

@@ -19,8 +19,10 @@ package org.apache.spark.mllib.tree.model.opdtmodel
 
 import java.io.{File, FileOutputStream, PrintWriter}
 
+import org.apache.spark.SparkContext
 import org.apache.spark.annotation.Experimental
 import org.apache.spark.api.java.JavaRDD
+import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.tree.config.Algo
 import org.apache.spark.mllib.tree.config.Algo._
@@ -31,9 +33,8 @@ import org.apache.spark.mllib.tree.model.node.Node
 import org.apache.spark.mllib.tree.model.predict.Predict
 import org.apache.spark.mllib.util.{Loader, Saveable}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.sql._
 import org.apache.spark.util.Utils
-import org.apache.spark.{Logging, SparkContext}
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -283,8 +284,8 @@ object OptimizedDecisionTreeModel extends Loader[OptimizedDecisionTreeModel] wit
 
 
       def save(sc: SparkContext, path: String, model: OptimizedDecisionTreeModel): Unit = {
-        val sqlContext = new SQLContext(sc)
-        import sqlContext.implicits._
+        val sparkSession = SparkSession.builder.getOrCreate()
+        import sparkSession.implicits._
 
         // SPARK-6120: We do a hacky check here so users understand why save() is failing
         //             when they run the ML guide example.
@@ -324,9 +325,10 @@ object OptimizedDecisionTreeModel extends Loader[OptimizedDecisionTreeModel] wit
 
       def load(sc: SparkContext, path: String, algo: String, numNodes: Int): OptimizedDecisionTreeModel = {
         val datapath = Loader.dataPath(path)
-        val sqlContext = new SQLContext(sc)
+        val sparkSession = SparkSession.builder.getOrCreate()
+        import sparkSession.implicits._
         // Load Parquet data.
-        val dataRDD = sqlContext.read.parquet(datapath)
+        val dataRDD = sparkSession.read.parquet(datapath)
         // Check schema explicitly since erasure makes it hard to use match-case for checking.
         Loader.checkSchema[TreeNodeData](dataRDD.schema)
         val nodes = dataRDD.map(TreeNodeData.apply)
@@ -340,8 +342,8 @@ object OptimizedDecisionTreeModel extends Loader[OptimizedDecisionTreeModel] wit
         model
       }
 
-      def constructTrees(nodes: RDD[TreeNodeData]): Array[Node] = {
-        val trees = nodes
+      def constructTrees(nodes: Dataset[TreeNodeData]): Array[Node] = {
+        val trees = nodes.rdd
           .groupBy(_.treeId)
           .mapValues(_.toArray)
           .collect()
